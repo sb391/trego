@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "screener-crawler"
+version = "0.1.0"
+description = "Phase 1 discovery crawler for Screener industry listings"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "beautifulsoup4>=4.12,<5",
+  "fastapi>=0.116,<1",
+  "httpx>=0.27,<1",
+  "lxml>=5.2,<6",
+  "openpyxl>=3.1,<4",
+  "pandas>=2.2,<3",
+  "pdfplumber>=0.11,<1",
+  "pydantic>=2.10,<3",
+  "PyMuPDF>=1.26,<2",
+  "pypdf>=5.0,<6",
+  "python-docx>=1.1,<2",
+  "python-multipart>=0.0.20,<1",
+  "reportlab>=4.2,<5",
+  "scikit-learn>=1.6,<2",
+  "tenacity>=9.0,<10",
+  "uvicorn>=0.35,<1",
+]
+
+[project.scripts]
+screener-crawler = "screener_crawler.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

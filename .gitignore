@@ -1,0 +1,37 @@
+.DS_Store
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Local environment files
+.env
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Generated crawler data
+data/
+output/
+outputs/
+tmp/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/.next_backup_*/
+frontend/.next_stale_*/
+frontend/out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

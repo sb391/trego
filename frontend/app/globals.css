@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(200, 169, 106, 0.14), transparent 18%),
+      linear-gradient(180deg, #f8f2e8 0%, #fbf7f1 100%);
+    color: #081c31;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  a[href],
+  button,
+  [type="button"],
+  [type="submit"] {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: rgba(200, 169, 106, 0.3);
+    color: #081c31;
+  }
+}
+
+@layer components {
+  .luxury-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent;
+  }
+
+  .hero-wash {
+    background:
+      radial-gradient(circle at 14% 20%, rgba(164, 61, 83, 0.09), transparent 22%),
+      radial-gradient(circle at 75% 18%, rgba(72, 46, 140, 0.08), transparent 22%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  }
+
+  .soft-grid {
+    background-image:
+      linear-gradient(rgba(150, 125, 150, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(150, 125, 150, 0.08) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .ticker-shell {
+    @apply relative overflow-hidden;
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .ticker-track {
+    @apply flex min-w-max gap-4;
+    animation: ticker-scroll 28s linear infinite;
+  }
+
+  .ticker-track-fast {
+    @apply flex min-w-max gap-4;
+    animation: ticker-scroll 20s linear infinite;
+  }
+
+  .ticker-track-light {
+    @apply flex min-w-max gap-4;
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  .metric-pulse {
+    animation: metric-pulse 3.6s ease-in-out infinite;
+  }
+
+  .drift-delayed {
+    animation: drift-delayed 9s ease-in-out infinite;
+  }
+
+  .drift-orbit {
+    animation: drift-orbit 8s ease-in-out infinite;
+  }
+
+  .chart-trace {
+    stroke-dasharray: 780;
+    stroke-dashoffset: 780;
+    animation: chart-trace 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .chart-pulse {
+    animation: chart-pulse 3s ease-out infinite;
+    transform-origin: center;
+  }
+
+  .interactive-press {
+    @apply cursor-pointer transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-200 ease-out;
+    transform-origin: center;
+  }
+
+  .interactive-press:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  @media (max-width: 639px) {
+    .ticker-track,
+    .ticker-track-fast,
+    .ticker-track-light {
+      animation-duration: 34s;
+    }
+
+    .soft-grid {
+      background-size: 52px 52px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track,
+  .ticker-track-fast,
+  .ticker-track-light,
+  .metric-pulse,
+  .drift-delayed,
+  .drift-orbit,
+  .chart-trace,
+  .chart-pulse {
+    animation: none !important;
+  }
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes metric-pulse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.92;
+  }
+
+  50% {
+    transform: translate3d(0, -2px, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes drift-delayed {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes drift-orbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -5px, 0) scale(1.06);
+  }
+}
+
+@keyframes chart-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chart-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+
+  70% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}

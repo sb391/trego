@@ -27,6 +27,7 @@ tmp/
 frontend/node_modules/
 frontend/.next/
 frontend/.next-dev/
+frontend/.next_debug_before_restart_*/
 frontend/.next_backup_*/
 frontend/.next_stale_*/
 frontend/out/

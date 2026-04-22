@@ -1,0 +1,7 @@
+.next
+.next-dev
+.next_debug_before_restart_*
+.env.local
+.env*.local
+*.log
+logs

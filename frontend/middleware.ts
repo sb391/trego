@@ -4,6 +4,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabaseBrowserEnv, isAllowedAdminEmail } from "./lib/supabase/config";
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host")?.toLowerCase();
+
+  if (host === "tregocapital.com") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.protocol = "https";
+    redirectUrl.hostname = "www.tregocapital.com";
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
   const pathname = request.nextUrl.pathname;
   const isAdminPage = pathname.startsWith("/admin");
   const isAdminApi = pathname.startsWith("/api/admin");
@@ -95,5 +104,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)"],
 };

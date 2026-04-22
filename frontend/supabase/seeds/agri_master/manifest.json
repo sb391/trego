@@ -1,0 +1,8 @@
+{
+  "source_file": "/Users/sysadm/Desktop/Crawler/outputs/consolidated_listed_250cr_profitable/reports/consolidated_106_companies_master.csv",
+  "company_count": 106,
+  "financial_snapshot_count": 106,
+  "rating_count": 106,
+  "simulation_count": 7,
+  "secretary_count": 103
+}

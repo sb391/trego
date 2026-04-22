@@ -83,6 +83,7 @@ class RatingDiscoveryService:
         company_name: str,
         *,
         dataset_rating_text: str | None = None,
+        aliases: list[str] | None = None,
         mode: DiscoveryMode = "legacy",
         use_repository: bool | None = None,
         allow_dataset_fallback: bool | None = None,
@@ -95,13 +96,31 @@ class RatingDiscoveryService:
             if cached and cached.rating_available_flag:
                 return cached
 
-        history = (
-            self._discover_from_cra_domains(company_name, include_domain_search_fallback=(mode == "cra_first"))
-            if mode != "legacy"
-            else self._discover_from_web(company_name)
-        )
+        history: list[RatingHistoryEntry] = []
+        matched_name = company_name
+        for candidate_name in self._ordered_company_name_candidates(company_name, aliases):
+            candidate_history = (
+                self._discover_from_cra_domains(
+                    candidate_name,
+                    include_domain_search_fallback=(mode == "cra_first"),
+                )
+                if mode != "legacy"
+                else self._discover_from_web(candidate_name)
+            )
+            if candidate_history:
+                history = candidate_history
+                matched_name = candidate_name
+                break
+
         if history:
             latest = history[0]
+            note = (
+                "Discovered via CRA-domain validation workflow."
+                if mode != "legacy"
+                else "Discovered via search-engine-guided CRA document parsing."
+            )
+            if matched_name.strip() != company_name.strip():
+                note = f"{note} Matched using alternate company name '{matched_name}'."
             return RatingInsight(
                 rating_available_flag=bool(latest.rating),
                 rating_status="available" if latest.rating else "not_available",
@@ -111,11 +130,7 @@ class RatingDiscoveryService:
                 rating_date=latest.rating_date,
                 rating_action=latest.rating_action,
                 history=history,
-                notes=[
-                    "Discovered via CRA-domain validation workflow."
-                    if mode != "legacy"
-                    else "Discovered via search-engine-guided CRA document parsing."
-                ],
+                notes=[note],
             )
 
         if allow_dataset_fallback:
@@ -127,6 +142,18 @@ class RatingDiscoveryService:
         if mode == "cra_only":
             return RatingInsight(notes=["CRA-only discovery returned no parseable CRA document."])
         return RatingInsight()
+
+    def _ordered_company_name_candidates(self, company_name: str, aliases: list[str] | None = None) -> list[str]:
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for raw_name in [company_name, *(aliases or [])]:
+            candidate = " ".join(str(raw_name or "").split())
+            normalized = normalize_company_name(candidate)
+            if not candidate or not normalized or normalized in seen:
+                continue
+            ordered.append(candidate)
+            seen.add(normalized)
+        return ordered or [company_name]
 
     def _discover_from_cra_domains(
         self,

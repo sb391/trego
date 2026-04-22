@@ -38,7 +38,7 @@ export function PrimaryNav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#ece2e6] bg-[rgba(255,253,250,0.96)] backdrop-blur-xl shadow-[0_12px_30px_rgba(10,37,64,0.12)]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-8 sm:py-4 lg:px-12">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 pb-3.5 pt-5 sm:px-8 sm:py-4 lg:px-12">
         <BrandLogo />
 
         <nav className="hidden items-center gap-8 lg:flex">

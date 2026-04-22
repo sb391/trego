@@ -14,7 +14,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from ..config import AppConfig
-from ..io_utils import build_company_id
+from ..io_utils import build_company_id, normalize_company_name
 from ..utils.pdf import extract_pdf_text
 from ..utils.text import sanitize_filename
 from .config import CreditIntelConfig
@@ -272,8 +272,11 @@ def _discover_latest_cra_ratings(
     service = RatingDiscoveryService(config, repository)
 
     screener_history = pd.read_csv(source_history_path) if source_history_path.exists() else pd.DataFrame()
+    download_status_path = source_root / "download_status.csv"
+    download_status = pd.read_csv(download_status_path) if download_status_path.exists() else pd.DataFrame()
     screener_lookup: dict[str, dict[str, Any]] = {}
     screener_history_lookup: dict[str, list[dict[str, Any]]] = {}
+    download_status_lookup: dict[str, dict[str, Any]] = {}
     if not screener_history.empty and "company_id" in screener_history.columns:
         screener_history = _normalize_merge_keys(screener_history, ["company_id", "company_name"])
         screener_history["rating_date_parsed"] = pd.to_datetime(screener_history.get("rating_date"), errors="coerce")
@@ -286,6 +289,11 @@ def _discover_latest_cra_ratings(
             records = group.to_dict(orient="records")
             screener_history_lookup[company_key] = records
             screener_lookup[company_key] = records[0]
+    if not download_status.empty and "company_id" in download_status.columns:
+        download_status = _normalize_merge_keys(download_status, ["company_id", "company_name"])
+        download_status_lookup = {
+            str(record["company_id"]): record for record in download_status.to_dict(orient="records")
+        }
 
     existing_latest = pd.read_csv(latest_output_path) if latest_output_path.exists() and not force else pd.DataFrame()
     existing_history = pd.read_csv(history_output_path) if history_output_path.exists() and not force else pd.DataFrame()
@@ -295,12 +303,14 @@ def _discover_latest_cra_ratings(
 
     latest_rows: list[dict[str, Any]] = []
     history_rows: list[dict[str, Any]] = existing_history.to_dict(orient="records") if not existing_history.empty else []
+    screener_name_cache: dict[str, str | None] = {}
 
     for row in companies_frame.to_dict(orient="records"):
         company_id = str(row["company_id"])
         company_name = str(row["company_name"])
-        if company_id in existing_lookup:
-            latest_rows.append(existing_lookup[company_id])
+        existing_latest_row = existing_lookup.get(company_id)
+        if _should_reuse_existing_latest(existing_latest_row):
+            latest_rows.append(_with_rating_medium(existing_latest_row))
             continue
 
         cached_latest = screener_lookup.get(company_id)
@@ -315,7 +325,8 @@ def _discover_latest_cra_ratings(
                     "latest_cra_rating_date": cached_latest.get("rating_date"),
                     "latest_cra_rating_month_year": _month_year(cached_latest.get("rating_date")),
                     "latest_cra_rating_source_url": cached_latest.get("rating_update_url"),
-                    "latest_cra_rating_source": "screener_documents_cache",
+                    "latest_cra_rating_source": cached_latest.get("extraction_method") or cached_latest.get("source") or "screener_documents",
+                    "latest_cra_rating_medium": "screener.in",
                     "cra_history_count": len(screener_history_lookup.get(company_id, [])),
                 }
             )
@@ -332,24 +343,39 @@ def _discover_latest_cra_ratings(
                         "outlook": entry.get("outlook"),
                         "rating_action": entry.get("rating_action"),
                         "source_url": entry.get("rating_update_url"),
-                        "source": entry.get("extraction_method") or entry.get("source") or "screener_documents_cache",
+                        "source": entry.get("extraction_method") or entry.get("source") or "screener_documents",
+                        "source_medium": "screener.in",
                     }
                 )
             pd.DataFrame(latest_rows).to_csv(latest_output_path, index=False)
             pd.DataFrame(history_rows).to_csv(history_output_path, index=False)
             continue
 
+        status_row = download_status_lookup.get(company_id, {})
+        screener_url = str(row.get("screener_url") or status_row.get("screener_url") or "").strip() or None
+        screener_legal_name = _fetch_screener_legal_name(screener_url, screener_name_cache)
+        search_names = _build_rating_search_names(
+            company_name,
+            str(status_row.get("company_name") or "").strip() or None,
+            screener_legal_name,
+        )
+
         LOGGER.info("CRA-native rating discovery for %s", company_name)
-        try:
-            insight = service.discover(
-                company_name,
-                mode="cra_only",
-                use_repository=False,
-                allow_dataset_fallback=False,
-            )
-        except Exception as exc:  # noqa: BLE001
-            LOGGER.warning("CRA-native discovery failed for %s: %s", company_name, exc)
-            insight = None
+        insight = None
+        for search_name in search_names:
+            try:
+                insight = service.discover(
+                    search_name,
+                    aliases=search_names,
+                    mode="cra_only",
+                    use_repository=False,
+                    allow_dataset_fallback=False,
+                )
+            except Exception as exc:  # noqa: BLE001
+                LOGGER.warning("CRA-native discovery failed for %s via %s: %s", company_name, search_name, exc)
+                insight = None
+            if insight and insight.rating_available_flag:
+                break
 
         if insight and insight.rating_available_flag:
             latest_entry = insight.history[0] if insight.history else None
@@ -364,6 +390,7 @@ def _discover_latest_cra_ratings(
                     "latest_cra_rating_month_year": _month_year(latest_entry.rating_date if latest_entry else insight.rating_date),
                     "latest_cra_rating_source_url": latest_entry.source_url if latest_entry else None,
                     "latest_cra_rating_source": latest_entry.source if latest_entry else "cra_native_site_search",
+                    "latest_cra_rating_medium": "cra_crawl",
                     "cra_history_count": len(insight.history),
                 }
             )
@@ -381,6 +408,7 @@ def _discover_latest_cra_ratings(
                         "rating_action": entry.rating_action,
                         "source_url": entry.source_url,
                         "source": entry.source,
+                        "source_medium": "cra_crawl",
                     }
                 )
         else:
@@ -395,6 +423,7 @@ def _discover_latest_cra_ratings(
                     "latest_cra_rating_month_year": None,
                     "latest_cra_rating_source_url": None,
                     "latest_cra_rating_source": "not_found",
+                    "latest_cra_rating_medium": "not_found",
                     "cra_history_count": 0,
                 }
             )
@@ -408,6 +437,60 @@ def _discover_latest_cra_ratings(
     latest_frame.to_csv(latest_output_path, index=False)
     history_frame.to_csv(history_output_path, index=False)
     return latest_frame, history_frame
+
+
+def _should_reuse_existing_latest(existing_row: dict[str, Any] | None) -> bool:
+    if not existing_row:
+        return False
+    return str(existing_row.get("latest_cra_rating_status") or "").strip().lower() == "rated"
+
+
+def _with_rating_medium(row: dict[str, Any]) -> dict[str, Any]:
+    enriched = dict(row)
+    enriched["latest_cra_rating_medium"] = _derive_rating_medium(enriched.get("latest_cra_rating_source"))
+    return enriched
+
+
+def _derive_rating_medium(source: Any) -> str:
+    source_text = str(source or "").strip().lower()
+    if "screener" in source_text:
+        return "screener.in"
+    if source_text and source_text != "not_found":
+        return "cra_crawl"
+    return "not_found"
+
+
+def _build_rating_search_names(*names: str | None) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for raw_name in names:
+        candidate = " ".join(str(raw_name or "").split())
+        normalized = normalize_company_name(candidate)
+        if not candidate or not normalized or normalized in seen:
+            continue
+        ordered.append(candidate)
+        seen.add(normalized)
+    return ordered
+
+
+def _fetch_screener_legal_name(screener_url: str | None, cache: dict[str, str | None]) -> str | None:
+    if not screener_url:
+        return None
+    if screener_url in cache:
+        return cache[screener_url]
+    try:
+        with httpx.Client(headers={"User-Agent": "Mozilla/5.0"}, timeout=30.0, follow_redirects=True) as client:
+            response = client.get(screener_url)
+            response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.debug("Unable to fetch Screener legal name from %s: %s", screener_url, exc)
+        cache[screener_url] = None
+        return None
+    soup = BeautifulSoup(response.text, "lxml")
+    header = soup.find("h1")
+    legal_name = " ".join(header.get_text(" ", strip=True).split()) if header else None
+    cache[screener_url] = legal_name or None
+    return cache[screener_url]
 
 
 def _extract_company_secretaries(
@@ -1125,6 +1208,7 @@ def _build_simulation_selection_for_companies(
             "latest_cra_rating_agency": "actual_rating_agency",
             "latest_cra_rating": "actual_rating",
             "latest_cra_rating_date": "actual_rating_date",
+            "latest_cra_rating_medium": "actual_rating_medium",
             "latest_cra_rating_source": "actual_rating_source",
             "latest_cra_rating_source_url": "actual_rating_source_url",
         }
@@ -1229,6 +1313,7 @@ def _build_final_master_frame(
         "latest_cra_rating",
         "latest_cra_rating_date",
         "latest_cra_rating_month_year",
+        "latest_cra_rating_medium",
         "latest_cra_rating_source",
         "latest_cra_rating_source_url",
         "cra_history_count",

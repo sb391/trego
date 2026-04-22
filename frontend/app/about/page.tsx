@@ -32,7 +32,7 @@ const founders: FounderProfile[] = [
     name: "Ashish Sharma",
     role: "Co-Founder",
     initials: "AS",
-    image: "/assets/ashish-sharma.avif",
+    image: "/assets/ashish-sharma2.jpeg",
     imageClassName: "object-cover object-top",
     summary: "Credit and capital-access leader with operating depth across PaySense, PayU Finance, ICICI Bank, and PayPal.",
     bio: [

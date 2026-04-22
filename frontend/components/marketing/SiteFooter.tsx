@@ -16,8 +16,10 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <FooterList title="Company" items={companyFooterLinks} />
-        <FooterList title="Services" items={serviceFooterLinks} />
+        <div className="grid grid-cols-2 items-start gap-6 sm:gap-8 lg:contents">
+          <FooterList title="Company" items={companyFooterLinks} />
+          <FooterList title="Services" items={serviceFooterLinks} />
+        </div>
 
         <div>
           <h3 className="text-[0.84rem] font-semibold uppercase tracking-[0.24em] text-[#2f255f]">Our offices</h3>
@@ -46,9 +48,11 @@ function FooterList({
 }) {
   return (
     <div>
-      <h3 className="text-[0.76rem] font-semibold uppercase tracking-[0.2em] text-[#2f255f] sm:text-[0.84rem] sm:tracking-[0.24em]">{title}</h3>
+      <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#2f255f] sm:text-[0.84rem] sm:tracking-[0.24em]">
+        {title}
+      </h3>
       <div className="mt-4 h-1 w-8 rounded-full bg-[#ddcad5]" />
-      <ul className="mt-5 space-y-3.5 text-[0.98rem] text-[#607182] sm:mt-6 sm:space-y-4 sm:text-[1.05rem]">
+      <ul className="mt-5 space-y-3 text-[0.88rem] leading-6 text-[#607182] sm:mt-6 sm:space-y-4 sm:text-[1.05rem] sm:leading-7">
         {items.map((item) => (
           <li key={item.href}>
             <Link href={item.href} className="transition hover:text-[#b45a3c]">

@@ -1,0 +1,23 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/exports/agri-master/route": "app/api/admin/exports/agri-master/route.js",
+  "/api/inquiries/route": "app/api/inquiries/route.js",
+  "/api/admin/exports/inquiries/route": "app/api/admin/exports/inquiries/route.js",
+  "/api/admin/exports/joined-dump/route": "app/api/admin/exports/joined-dump/route.js",
+  "/api/admin/inquiries/[id]/route": "app/api/admin/inquiries/[id]/route.js",
+  "/about/page": "app/about/page.js",
+  "/capabilities/page": "app/capabilities/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/page": "app/page.js",
+  "/services/page": "app/services/page.js",
+  "/speak-to-advisor/page": "app/speak-to-advisor/page.js",
+  "/approach/page": "app/approach/page.js",
+  "/mobile-preview/page": "app/mobile-preview/page.js",
+  "/services/[slug]/page": "app/services/[slug]/page.js",
+  "/admin/agri-companies/page": "app/admin/agri-companies/page.js",
+  "/admin/inquiries/page": "app/admin/inquiries/page.js",
+  "/admin/exports/page": "app/admin/exports/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/setup/page": "app/admin/setup/page.js",
+  "/admin/login/page": "app/admin/login/page.js"
+}

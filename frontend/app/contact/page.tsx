@@ -1,4 +1,4 @@
-import { ContactFormPanel, ContactSidePanel } from "../../components/marketing/ContactPanels";
+import { ResponsiveContactPanels } from "../../components/marketing/ContactPanels";
 import { MarketingShell } from "../../components/marketing/MarketingShell";
 import { PageIntro } from "../../components/marketing/PageIntro";
 import { Reveal } from "../../components/marketing/Reveal";
@@ -15,10 +15,7 @@ export default function ContactPage() {
 
         <div className="mx-auto mt-14 max-w-7xl px-5 sm:px-8 lg:px-12">
           <Reveal>
-            <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr]">
-              <ContactFormPanel />
-              <ContactSidePanel />
-            </div>
+            <ResponsiveContactPanels />
           </Reveal>
         </div>
       </section>

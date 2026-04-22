@@ -139,6 +139,8 @@ export function MobilePreviewStudio() {
 function MobileDeviceFrame({ device, path }: { device: PreviewDevice; path: string }) {
   const scale = device.frameWidth / device.width;
   const frameHeight = Math.round(device.height * scale);
+  const safeAreaHeight = 64;
+  const bottomChromeHeight = 10;
 
   return (
     <section className="rounded-[2rem] border border-[#e7dadd] bg-[linear-gradient(180deg,#fffdfb_0%,#faf6f2_100%)] p-4 shadow-[0_22px_48px_rgba(10,37,64,0.08)]">
@@ -157,13 +159,20 @@ function MobileDeviceFrame({ device, path }: { device: PreviewDevice; path: stri
       <div className="mt-4 flex justify-center">
         <div
           className="relative overflow-hidden rounded-[2.2rem] border-[8px] border-[#17182b] bg-[#17182b] shadow-[0_24px_56px_rgba(10,37,64,0.18)]"
-          style={{ width: device.frameWidth + 16, height: frameHeight + 28 }}
+          style={{
+            width: device.frameWidth + 16,
+            height: frameHeight + safeAreaHeight + bottomChromeHeight + 16,
+          }}
         >
-          <div className="absolute left-1/2 top-2 z-10 h-5 w-28 -translate-x-1/2 rounded-full bg-[#0b0c19]" />
+          <div className="absolute inset-x-0 top-0 z-10 h-[64px] bg-[#fbf8f4]" />
+          <div className="absolute left-1/2 top-2 z-20 h-5 w-28 -translate-x-1/2 rounded-full bg-[#0b0c19]" />
+          <div className="absolute inset-x-4 top-7 z-20 flex items-center justify-center rounded-full border border-[#e7dadd] bg-white px-3 py-1 text-[10px] font-medium tracking-[0.02em] text-[#506173] shadow-[0_8px_16px_rgba(10,37,64,0.06)]">
+            localhost:3000
+          </div>
           <div className="absolute inset-x-0 bottom-0 h-6 bg-[#17182b]" />
           <div
-            className="absolute left-0 top-0 origin-top-left overflow-hidden bg-white"
-            style={{ width: device.width, height: device.height, transform: `scale(${scale})` }}
+            className="absolute left-0 origin-top-left overflow-hidden bg-white"
+            style={{ top: safeAreaHeight, width: device.width, height: device.height, transform: `scale(${scale})` }}
           >
             <iframe
               key={`${path}-${device.width}`}

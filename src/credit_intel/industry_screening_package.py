@@ -9,7 +9,7 @@ import pandas as pd
 
 from ..config import AppConfig
 from ..io_utils import ensure_runtime_directories, sanitize_filename
-from ..workflow import run_phase_two_downloads
+from ..workflow import run_phase_three_credit_ratings, run_phase_two_downloads
 from .agri_listed_export import run_industry_listed_export
 from .industry_export import ScreenerIndustryExportBrowser, bootstrap_download_status_from_input_csv
 from .simulation_pipeline import build_industry_financial_dataset
@@ -102,6 +102,18 @@ def run_industry_screening_package(
         interactive_login=interactive_login,
     )
 
+    credit_rating_summary = run_phase_three_credit_ratings(
+        input_path=industry_csv_path,
+        config=config,
+        limit=None,
+        resume=(
+            config.credit_rating_history_path.exists()
+            and config.credit_rating_status_path.exists()
+            and not force_ratings
+        ),
+        force=force_ratings,
+    )
+
     financial_outputs = build_industry_financial_dataset(
         input_csv_path=industry_csv_path,
         download_status_path=config.download_status_path,
@@ -125,6 +137,7 @@ def run_industry_screening_package(
         "industry_csv_path": industry_csv_path,
         "bootstrapped_download_rows": bootstrap_rows,
         "download_summary": download_summary,
+        "credit_rating_summary": credit_rating_summary,
         "financial_outputs": financial_outputs,
         "package_outputs": package_outputs,
     }
